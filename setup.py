@@ -15,7 +15,7 @@ def get_requirements(requirements_path: str) -> List[str]:
 setup(
 
     name = 'mlproject',
-    versiobn = '0.0.1',
+    version = '0.0.1',
     author = 'Swapnil',
     author_email = 'swapniljoijode22@gmail.com',
     packages = find_packages(),
