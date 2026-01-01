@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home | Churn Prediction</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1b33;
+      --muted:#93a4c7;
+      --text:#eaf0ff;
+      --border:rgba(255,255,255,.12);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --danger:#ff6b6b;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(110,168,254,.15), transparent 50%),
+                  radial-gradient(900px 700px at 90% 20%, rgba(126,231,135,.10), transparent 45%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px 16px;
+    }
+    .wrap{ width:min(1050px, 100%); }
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:16px;
+      margin-bottom:18px;
+    }
+    h1{ margin:0 0 6px; font-size: clamp(22px, 3vw, 34px); }
+    p{ margin:0; color:var(--muted); font-size:14px; max-width:70ch; }
+    .badge{
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:13px;
+      background: rgba(255,255,255,.03);
+      backdrop-filter: blur(6px);
+      white-space:nowrap;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    form{ padding:18px; }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+    .section{
+      grid-column: 1 / -1;
+      margin-top: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .section:first-child{
+      margin-top:0;
+      padding-top:0;
+      border-top:none;
+    }
+    .section h2{
+      margin:0;
+      font-size: 13px;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .hint{ font-size: 12px; color: var(--muted); }
+    .field{
+      grid-column: span 6;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field.sm{ grid-column: span 4; }
+    .field.xs{ grid-column: span 3; }
+    label{ font-size: 13px; color: var(--muted); }
+    input, select{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(15, 27, 51, .55);
+      color: var(--text);
+      outline:none;
+    }
+    input:focus, select:focus{ border-color: rgba(110,168,254,.65); }
+    .required{ color: var(--danger); margin-left: 4px; }
+
+    .row{
+      grid-column: 1 / -1;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      margin-top: 6px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+    button{
+      cursor:pointer;
+      border:none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 600;
+      letter-spacing:.2px;
+      transition: transform .05s ease, opacity .15s ease;
+    }
+    button:active{ transform: translateY(1px); }
+    .primary{
+      background: linear-gradient(90deg, rgba(110,168,254,1), rgba(126,231,135,1));
+      color:#071021;
+    }
+    .secondary{
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .note{
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.4;
+      max-width: 80ch;
+    }
+    @media (max-width: 860px){
+      .field{ grid-column: span 12; }
+      .field.sm{ grid-column: span 12; }
+      .field.xs{ grid-column: span 6; }
+      header{ flex-direction:column; align-items:flex-start; }
+      .badge{ align-self:flex-start; }
+    }
+
+    /* ===== Modal (Dialogue Box) ===== */
+    .modal-overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 50;
+    }
+    .modal{
+      width: min(520px, 100%);
+      background: rgba(15, 27, 51, .92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      animation: pop .12s ease-out;
+    }
+    @keyframes pop{
+      from{ transform: scale(.98); opacity: .6; }
+      to{ transform: scale(1); opacity: 1; }
+    }
+    .modal-header{
+      padding: 14px 16px;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .modal-title{ font-weight: 700; letter-spacing: .2px; }
+    .modal-close{
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+    .modal-body{
+      padding: 16px;
+      color: var(--text);
+      line-height: 1.45;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .big-result{
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      margin: 6px 0 8px;
+    }
+    .sub{
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+    .modal-footer{
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Churn Prediction — Home</h1>
+        <p>Submit inputs to get a churn prediction. If the backend sends <b>{{result}}</b>, this page will show it in a dialogue box.</p>
+      </div>
+      <div class="badge">POST /predictdata → result</div>
+    </header>
+
+    <div class="card">
+      <form method="POST" action="/predictdata" autocomplete="on">
+        <div class="grid">
+
+          <div class="section">
+            <h2>Customer details</h2>
+            <div class="hint">Demographics & account attributes</div>
+          </div>
+
+          <div class="field xs">
+            <label for="gender">Gender <span class="required">*</span></label>
+            <select id="gender" name="gender" required>
+              <option value="" selected disabled>Select…</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="field xs">
+            <label for="age">Age <span class="required">*</span></label>
+            <input id="age" name="age" type="number" min="13" max="100" step="1" required placeholder="28" />
+          </div>
+
+          <div class="field xs">
+            <label for="membership_type">Membership Type <span class="required">*</span></label>
+            <select id="membership_type" name="membership_type" required>
+              <option value="" selected disabled>Select…</option>
+              <option value="Basic">Basic</option>
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
+            </select>
+          </div>
+
+          <div class="field xs">
+            <label for="country">Country <span class="required">*</span></label>
+            <select id="country" name="country" required>
+              <option value="" selected disabled>Select…</option>
+              <option value="US">US</option>
+              <option value="CA">CA</option>
+              <option value="UK">UK</option>
+              <option value="IN">IN</option>
+              <option value="BR">BR</option>
+              <option value="DE">DE</option>
+              <option value="AU">AU</option>
+            </select>
+          </div>
+
+          <div class="field sm">
+            <label for="join_date">Join Date <span class="required">*</span></label>
+            <input id="join_date" name="join_date" type="date" required />
+          </div>
+
+          <div class="field sm">
+            <label for="devices_owned">Devices Owned <span class="required">*</span></label>
+            <input id="devices_owned" name="devices_owned" type="number" min="0" max="20" step="1" required placeholder="2" />
+          </div>
+
+          <div class="field sm">
+            <label for="profile_count">Profile Count <span class="required">*</span></label>
+            <input id="profile_count" name="profile_count" type="number" min="1" max="10" step="1" required placeholder="3" />
+          </div>
+
+          <div class="section">
+            <h2>Engagement metrics</h2>
+            <div class="hint">Recent streaming behavior</div>
+          </div>
+
+          <div class="field sm">
+            <label for="avg_watch_minutes">Avg Watch Minutes <span class="required">*</span></label>
+            <input id="avg_watch_minutes" name="avg_watch_minutes" type="number" min="0" max="1000" step="0.1" required placeholder="95.5" />
+          </div>
+
+          <div class="field sm">
+            <label for="avg_sessions">Avg Sessions <span class="required">*</span></label>
+            <input id="avg_sessions" name="avg_sessions" type="number" min="0" max="50" step="0.1" required placeholder="2.1" />
+          </div>
+
+          <div class="field sm">
+            <label for="binge_days">Binge Days <span class="required">*</span></label>
+            <input id="binge_days" name="binge_days" type="number" min="0" max="60" step="1" required placeholder="3" />
+          </div>
+
+          <div class="field sm">
+            <label for="active_days">Active Days <span class="required">*</span></label>
+            <input id="active_days" name="active_days" type="number" min="0" max="90" step="1" required placeholder="20" />
+          </div>
+
+          <div class="section">
+            <h2>Billing metrics</h2>
+            <div class="hint">Payment behavior & amounts</div>
+          </div>
+
+          <div class="field xs">
+            <label for="late_ratio">Late Payment Ratio <span class="required">*</span></label>
+            <input id="late_ratio" name="late_ratio" type="number" min="0" max="1" step="0.01" required placeholder="0.17" />
+          </div>
+
+          <div class="field xs">
+            <label for="payment_count">Payment Count <span class="required">*</span></label>
+            <input id="payment_count" name="payment_count" type="number" min="0" max="24" step="1" required placeholder="6" />
+          </div>
+
+          <div class="field xs">
+            <label for="avg_amount_due">Avg Amount Due <span class="required">*</span></label>
+            <input id="avg_amount_due" name="avg_amount_due" type="number" min="0" max="1000" step="0.01" required placeholder="15.49" />
+          </div>
+
+          <div class="field xs">
+            <label for="avg_amount_paid">Avg Amount Paid <span class="required">*</span></label>
+            <input id="avg_amount_paid" name="avg_amount_paid" type="number" min="0" max="1000" step="0.01" required placeholder="15.49" />
+          </div>
+
+          <div class="section">
+            <h2>Support metrics</h2>
+            <div class="hint">Tickets & resolution</div>
+          </div>
+
+          <div class="field sm">
+            <label for="ticket_count">Ticket Count <span class="required">*</span></label>
+            <input id="ticket_count" name="ticket_count" type="number" min="0" max="100" step="1" required placeholder="2" />
+          </div>
+
+          <div class="field sm">
+            <label for="avg_resolution">Avg Resolution Time (hrs) <span class="required">*</span></label>
+            <input id="avg_resolution" name="avg_resolution" type="number" min="0" max="500" step="0.1" required placeholder="18.5" />
+          </div>
+
+          <div class="field sm">
+            <label for="unresolved_count">Unresolved Ticket Count <span class="required">*</span></label>
+            <input id="unresolved_count" name="unresolved_count" type="number" min="0" max="100" step="1" required placeholder="0" />
+          </div>
+
+        </div>
+
+        <div class="row">
+          <div class="note">
+            After submit, Flask renders this template again with <code>result</code>. The modal opens automatically.
+          </div>
+          <div class="btns">
+            <button type="reset" class="secondary">Reset</button>
+            <button type="submit" class="primary">Predict</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dialogue Box -->
+  <div class="modal-overlay" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Model Result</div>
+        <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="secondary" id="modalOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Modal helpers =====
+    const modal = document.getElementById("resultModal");
+    const modalBody = document.getElementById("modalBody");
+    const closeBtn = document.getElementById("modalCloseBtn");
+    const okBtn = document.getElementById("modalOkBtn");
+
+    function openModal(html) {
+      modalBody.innerHTML = html;
+      modal.style.display = "flex";
+    }
+    function closeModal() { modal.style.display = "none"; }
+
+    closeBtn.addEventListener("click", closeModal);
+    okBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+    // ===== Auto-open modal if result exists =====
+    // result comes from Flask: render_template("home.html", result=0 or 1)
+    const result = "{{result}}";
+
+    // When page is rendered without result, Flask/Jinja may render it as empty.
+    if (result && result !== "None" && result !== "undefined") {
+      const r = result.trim();
+
+      let html;
+      if (r === "1") {
+        html = `<div class="big-result">1</div><p class="sub"><b>Churn</b> predicted</p>`;
+      } else if (r === "0") {
+        html = `<div class="big-result">0</div><p class="sub"><b>No churn</b> predicted</p>`;
+      } else {
+        html = `<div class="big-result">${r}</div><p class="sub">Received response from server.</p>`;
+      }
+
+      openModal(html);
+    }
+  </script>
+</body>
+</html>
