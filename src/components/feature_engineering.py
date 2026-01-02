@@ -6,20 +6,20 @@ from src.logger import logging
 from src.exception import CustomException
 
 
-def initiate_feature_engineering(df_path: str):
+def initiate_feature_engineering(df:pd.DataFrame) :
         try:
-            df = pd.read_csv(df_path)
-            logging.info("Read train and test data completed")
+            
+            logging.info("dataset for feature engineering read successfully")
 
             logging.info("Starting feature engineering")
             
             df["join_date"] = pd.to_datetime(df["join_date"])
             df["tenure_days"] = (pd.Timestamp("2024-12-31") - df["join_date"]).dt.days
-            df["watch_bucket"] = pd.qcut(
-                df["avg_watch_minutes"],
-                q=5,
-                labels=["Very Low", "Low", "Medium", "High", "Very High"]
-            )
+            # df["watch_bucket"] = pd.qcut(
+            #     df["avg_watch_minutes"],
+            #     q=5,
+            #     labels=["Very Low", "Low", "Medium", "High", "Very High"]
+            # )
             df["late_bucket"] = pd.cut(
                 df["late_ratio"],
                 bins=[0, 0.05, 0.15, 0.3, 1.0],

@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 import pandas as pandas
 import numpy as np
 from src.pipeline.predict_pipeline import CustomData, PredictPipeline
-
+from src.components.feature_engineering import initiate_feature_engineering
 
 from sklearn.preprocessing import StandardScaler
 application = Flask(__name__)
@@ -40,6 +40,7 @@ def predict_datapoint():
         )
         pred_df = data.get_data_as_data_frame()
         print(pred_df)
+        pred_df = initiate_feature_engineering(pred_df)
         predict_pipeline = PredictPipeline()
         results = predict_pipeline.predict(pred_df)
         return render_template('home.html', results=results[0])

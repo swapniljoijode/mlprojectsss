@@ -81,6 +81,6 @@ curated = curated.fillna(value=fill_map)
 
 # Optional: enforce churn int
 curated["churn"] = curated["churn"].astype(int)
-curated = curated.drop(columns=["is_active"], inplace=True)
+curated = curated.drop(columns=["is_active"])
 
 curated.to_csv("data/OTT_curated_dataset.csv", index=False)

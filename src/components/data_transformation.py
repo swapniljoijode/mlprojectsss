@@ -58,8 +58,11 @@ class DataTransformation:
         
     def initiate_data_transformation(self, train_path: str, test_path: str):
         try:
-            train_df = initiate_feature_engineering(train_path)
-            test_df = initiate_feature_engineering(test_path)
+            logging.info("Reading train and test data")
+            read_train_df = pd.read_csv(train_path)
+            read_test_df = pd.read_csv(test_path)
+            train_df = initiate_feature_engineering(read_train_df)
+            test_df = initiate_feature_engineering(read_test_df)
             logging.info("Read train and test data completed")
 
             numericalcolumns = train_df.drop(columns=['churn']).select_dtypes(include=['int64', 'float64']).columns.tolist()

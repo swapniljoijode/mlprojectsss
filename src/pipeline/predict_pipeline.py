@@ -68,24 +68,24 @@ class CustomData:
     def get_data_as_data_frame(self):
         try:
             custom_data_input_dict = {
-                "gender": self.gender,
-                "age": self.age,
-                "membership_type": self.membership_type,
-                "country": self.country,
-                "join_date": self.join_date,
-                "devices_owned": self.devices_owned,
-                "profile_count": self.profile_count,
-                "avg_watch_minutes": self.avg_watch_minutes,
-                "avg_sessions": self.avg_sessions,
-                "binge_days": self.binge_days,
-                "active_days": self.active_days,
-                "late_ratio": self.late_ratio,
-                "payment_count": self.payment_count,
-                "avg_amount_due": self.avg_amount_due,
-                "avg_amount_paid": self.avg_amount_paid,
-                "ticket_count": self.ticket_count,
-                "avg_resolution": self.avg_resolution,
-                "unresolved_count": self.unresolved_count
+                "gender": [self.gender],
+                "age": [self.age],
+                "membership_type": [self.membership_type],
+                "country": [self.country],
+                "join_date": [self.join_date],
+                "devices_owned": [self.devices_owned],
+                "profile_count": [self.profile_count],
+                "avg_watch_minutes": [self.avg_watch_minutes],
+                "avg_sessions": [self.avg_sessions],
+                "binge_days": [self.binge_days],
+                "active_days": [self.active_days],
+                "late_ratio": [self.late_ratio],
+                "payment_count": [self.payment_count],
+                "avg_amount_due": [self.avg_amount_due],
+                "avg_amount_paid": [self.avg_amount_paid],
+                "ticket_count": [self.ticket_count],
+                "avg_resolution": [self.avg_resolution],
+                "unresolved_count": [self.unresolved_count]
             }
             return pd.DataFrame(custom_data_input_dict)
         
