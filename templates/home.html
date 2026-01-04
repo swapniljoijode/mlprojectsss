@@ -413,7 +413,7 @@
 
     // ===== Auto-open modal if result exists =====
     // result comes from Flask: render_template("home.html", result=0 or 1)
-    const result = "{{result}}";
+    const result = "{{results}}";
 
     // When page is rendered without result, Flask/Jinja may render it as empty.
     if (result && result !== "None" && result !== "undefined") {

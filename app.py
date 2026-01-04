@@ -3,6 +3,7 @@ import pandas as pandas
 import numpy as np
 from src.pipeline.predict_pipeline import CustomData, PredictPipeline
 from src.components.feature_engineering import initiate_feature_engineering
+from src.logger import logging
 
 from sklearn.preprocessing import StandardScaler
 application = Flask(__name__)
@@ -40,10 +41,14 @@ def predict_datapoint():
         )
         pred_df = data.get_data_as_data_frame()
         print(pred_df)
+        logging.info("Obtained input data as dataframe")
         pred_df = initiate_feature_engineering(pred_df)
+        logging.info("Feature engineering completed on input data")
         predict_pipeline = PredictPipeline()
         results = predict_pipeline.predict(pred_df)
-        return render_template('home.html', results=results[0])
+        logging.info("Prediction completed")
+        logging.info(f"Prediction results: {results}, type: {type(results)}, shape: {np.array(results).shape}, values: {(results[0])}")
+        return render_template('home.html', results=int(results[0]))
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0",debug=True)

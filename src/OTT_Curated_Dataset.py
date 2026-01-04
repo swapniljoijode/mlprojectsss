@@ -1,21 +1,21 @@
 import OTT_Dataset_Creation as ott
 import pandas as pd
 import numpy as np
+from src.logger import logging
+# try:
+#     customers_df = ott.customers_df
+#     usage_df = ott.usage_logs_df
+#     payments_df = ott.payments_df
+#     tickets_df = ott.support_df
+#     labels_df = ott.churn_labels_df
 
-try:
-    customers_df = ott.customers_df
-    usage_df = ott.usage_logs_df
-    payments_df = ott.payments_df
-    tickets_df = ott.support_df
-    labels_df = ott.churn_labels_df
-
-except Exception as e:
-    customers_df = pd.read_csv("data/customers.csv")
-    usage_df = pd.read_csv("data/usage_logs.csv")
-    payments_df = pd.read_csv("data/payments.csv")
-    tickets_df = pd.read_csv("data/support_tickets.csv")
-    labels_df = pd.read_csv("data/churn_labels.csv")
-
+# except Exception as e:
+customers_df = pd.read_csv("data/customers.csv")
+usage_df = pd.read_csv("data/usage_logs.csv")
+payments_df = pd.read_csv("data/payments.csv")
+tickets_df = pd.read_csv("data/support_tickets.csv")
+labels_df = pd.read_csv("data/churn_labels.csv")
+logging.info("Read all source data files successfully")
 
 usage_agg = (
     usage_df.groupby("customer_id", as_index=False)
@@ -26,7 +26,7 @@ usage_agg = (
         active_days=("date", "nunique"),
     )
 )
-
+logging.info("Aggregated usage logs successfully")
 # -----------------------------
 # Aggregate payments (customer level)
 # -----------------------------
@@ -39,7 +39,7 @@ payments_agg = (
         avg_amount_paid=("amount_paid", "mean"),
     )
 )
-
+logging.info("Aggregated payments successfully")
 # -----------------------------
 # Aggregate tickets (customer level)
 # -----------------------------
@@ -51,7 +51,7 @@ tickets_agg = (
         unresolved_count=("resolved", lambda x: int((x == 0).sum())),
     )
 )
-
+logging.info("Aggregated support tickets successfully")
 # -----------------------------
 # Join to curated dataset
 # -----------------------------
@@ -59,7 +59,7 @@ curated = customers_df.merge(usage_agg, on="customer_id", how="left") \
                    .merge(payments_agg, on="customer_id", how="left") \
                    .merge(tickets_agg, on="customer_id", how="left") \
                    .merge(labels_df, on="customer_id", how="left")
-
+logging.info("Merged all data into curated dataset successfully")
 # -----------------------------
 # Fill missing values
 # -----------------------------
@@ -79,8 +79,12 @@ fill_map = {
 }
 curated = curated.fillna(value=fill_map)
 
+curated.drop(columns=["churn_y","churn_date_y","tenure_days_y","is_active_y"], inplace=True)
+curated.rename(columns={"churn_x":"churn","churn_date_x":"churn_date","tenure_days_x":"tenure_days","is_active_x":"is_active"}, inplace=True)
+
 # Optional: enforce churn int
 curated["churn"] = curated["churn"].astype(int)
 curated = curated.drop(columns=["is_active"])
-
+logging.info("Filled missing values in curated dataset successfully")
 curated.to_csv("data/OTT_curated_dataset.csv", index=False)
+logging.info("Saved curated dataset to data/OTT_curated_dataset.csv")
