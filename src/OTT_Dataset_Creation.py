@@ -64,13 +64,13 @@ customers_df.head()
 # -----------------------------
 usage_rows = []
 
-usage_start = END_DATE - timedelta(days=90)
+#usage_start = END_DATE - timedelta(days=90)
 
 for cid, mtype, jdate in zip(customers_df["customer_id"],
                              customers_df["membership_type"],
                              customers_df["join_date"]):
     # active period for logging
-    user_start = max(jdate, usage_start)
+    user_start = jdate
     if user_start > END_DATE:
         continue
 
@@ -312,10 +312,11 @@ for idx, cust in customers_df.iterrows():
 
     churn_date = None
 
-    # pre-filter this customer's full logs once (perf)
     u_all = usage_logs_df[usage_logs_df["customer_id"] == cid]
     p_all = payments_df[payments_df["customer_id"] == cid]
     t_all = support_df[support_df["customer_id"] == cid]
+
+    warmup_end = join_date + timedelta(days=29)  # day 30 since join
 
     for day in pd.date_range(join_date, END_DATE.date()):
         day_date = day.date()
@@ -338,6 +339,10 @@ for idx, cust in customers_df.iterrows():
         ticket_count = len(t)
         avg_resolution = t["resolution_time_hrs"].mean() if len(t) > 0 else 0
 
+        # DO NOT DECIDE BEFORE DAY 30
+        if day_date < warmup_end:
+            continue
+
         score = calc_daily_score(
             cust,
             avg_watch_minutes, avg_sessions, binge_days,
@@ -347,7 +352,6 @@ for idx, cust in customers_df.iterrows():
         churn_prob = 1 / (1 + np.exp(- (score * 2)))
 
         if churn_prob > THRESHOLD:
-            # SNAP to closest usage date on or before this day
             u_before = u_all[u_all["date"] <= day_date]
             if len(u_before) > 0:
                 churn_date = u_before["date"].max()
@@ -384,6 +388,10 @@ logging.info("Generated churn labels dataframe")
 # 6) TRUNCATE USAGE AFTER CHURN DATE
 # -----------------------------
 # merge churn info into usage_logs_df to know each customer's churn_date
+
+usage_logs_df["date"] = pd.to_datetime(usage_logs_df["date"]).dt.date
+churn_labels_df["churn_date"] = pd.to_datetime(churn_labels_df["churn_date"]).dt.date
+
 usage_logs_df = usage_logs_df.merge(
     churn_labels_df[["customer_id", "churn_date"]],
     on="customer_id",
@@ -401,6 +409,40 @@ usage_logs_df = usage_logs_df[
 # drop helper column if you don't want it in final logs
 usage_logs_df = usage_logs_df.drop(columns=["churn_date"])
 logging.info("Truncated usage logs after churn date")
+
+payments_df["bill_month"] = pd.to_datetime(payments_df["bill_month"]).dt.date
+#churn_labels_df["churn_date"] = pd.to_datetime(churn_labels_df["churn_date"]).dt.date
+
+payments_df = payments_df.merge(
+    churn_labels_df[["customer_id", "churn_date"]],
+    on="customer_id",
+    how="left"
+)
+
+payments_df = payments_df[
+    payments_df["churn_date"].isna() |
+    (payments_df["bill_month"] <= payments_df["churn_date"])
+].copy()
+
+payments_df = payments_df.drop(columns=["churn_date"])
+logging.info("Truncated payments after churn date")
+
+support_df["created_date"] = pd.to_datetime(support_df["created_date"]).dt.date
+#churn_labels_df["churn_date"] = pd.to_datetime(churn_labels_df["churn_date"]).dt.date
+
+support_df = support_df.merge(
+    churn_labels_df[["customer_id", "churn_date"]],
+    on="customer_id",
+    how="left"
+)
+
+support_df = support_df[
+    support_df["churn_date"].isna() |
+    (support_df["created_date"] <= support_df["churn_date"])
+].copy()
+
+support_df = support_df.drop(columns=["churn_date"])
+logging.info("Truncated support tickets after churn date")
 
 customers_df = customers_df.merge(
     churn_labels_df[["customer_id", "churn", "churn_date", "tenure_days", "is_active"]],
